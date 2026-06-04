@@ -435,7 +435,10 @@ echo "Hunt Complete! Check CE3_ELH_genomic_hits.tsv"
 ```
 
 ## Extract the DNA sequence from the results from the TBLASTN
-The second to last step is to finally get the DNA sequence out from our genome sequence. This is done by using the coordinates found in the previous bait filtering step.
+The second to last step is to finally get the DNA sequence out from our genome sequence. This is done by using the coordinates found in the previous bait filtering step. But how do we determine the top hit? We want to look at the E-value and bitscore column with the evalue being as close to zero as possible and the bitscore being as high as possible.
+
+To extract the coordinates you are going to want to look at the ssstart and ssend columns. When you enter the coordinates into the code, add 100 base pairs to either side, just to have a good buffer window.
+
 ```
 module load bio/SAMtools/1.16.1-GCC-11.3.0
 
@@ -443,7 +446,7 @@ module load bio/SAMtools/1.16.1-GCC-11.3.0
 samtools faidx CE3_r4_final.fasta.masked
 
 # Next, extract the region — replace scaffold name and coordinates with your actual hit coordinates from the TBLASTN results
-samtools faidx CE3_r4_final.fasta.masked <scaffold_name>:<start>-<end>
+samtools faidx CE3_r4_final.fasta.masked <scaffold name>:<sstart-ssend>
 ```
 
 # Step 6: Convert to Protein and prep for SignalP
