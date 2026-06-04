@@ -126,7 +126,85 @@ nano filter_swissprot.py
 ```
 Copy and paste the following
 ```
+import sys
+import os
+import csv
+
+def process_repro_blast(input_file, output_file):
+    """
+    Processes BLAST outfmt 6 without pandas.
+    Format: qseqid sseqid pident length evalue bitscore stitle
+    """
+    if not os.path.exists(input_file):
+        print(f"Error: {input_file} not found.")
+        return
+
+    # Dictionary to store the best hit for each gene
+    # Key: qseqid, Value: [bitscore, evalue, full_row_list]
+    best_hits = {}
+
+    print(f"Reading BLAST results from: {input_file}")
+    
+    try:
+        with open(input_file, 'r') as f:
+            # Using tab delimiter for outfmt 6
+            reader = csv.reader(f, delimiter='\t')
+            
+            count = 0
+            for row in reader:
+                if not row: continue
+                count += 1
+                
+                # Extract columns based on your -outfmt string
+                # 0:qseqid, 1:sseqid, 2:pident, 3:length, 4:evalue, 5:bitscore, 6:stitle
+                try:
+                    qseqid = row[0]
+                    evalue = float(row[4])
+                    bitscore = float(row[5])
+                except (ValueError, IndexError):
+                    continue # Skip malformed lines
+
+                # Logic: If we haven't seen this gene, or if this hit is better
+                # Higher bitscore is better. If bitscores equal, lower evalue is better.
+                if qseqid not in best_hits:
+                    best_hits[qseqid] = [bitscore, evalue, row]
+                else:
+                    current_best_bit = best_hits[qseqid][0]
+                    current_best_eva = best_hits[qseqid][1]
+                    
+                    if (bitscore > current_best_bit) or (bitscore == current_best_bit and evalue < current_best_eva):
+                        best_hits[qseqid] = [bitscore, evalue, row]
+
+        # Write the filtered results to a new TSV
+        header = ['qseqid', 'sseqid', 'pident', 'length', 'evalue', 'bitscore', 'stitle']
+        
+        with open(output_file, 'w', newline='') as f_out:
+            writer = csv.writer(f_out, delimiter='\t')
+            writer.writerow(header)
+            for gene in sorted(best_hits.keys()):
+                writer.writerow(best_hits[gene][2])
+
+        print(f"--- Processing Complete ---")
+        print(f"Total lines processed: {count}")
+        print(f"Unique genes with hits: {len(best_hits)}")
+        print(f"Filtered results saved to: {output_file}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    # Usage: python filter_swissprot.py reproductive_blast_results.txt reproductive_top_hits.tsv
+    input_fn = "reproductive_blast_results.txt"
+    output_fn = "reproductive_top_hits.tsv"
+    
+    if len(sys.argv) > 1:
+        input_fn = sys.argv[1]
+    if len(sys.argv) > 2:
+        output_fn = sys.argv[2]
+        
+    process_repro_blast(input_fn, output_fn)
 ```
+Now lets run the script!
 ```
 #Load Anaconda so that you are able to run python
 module load lang/Anaconda3
