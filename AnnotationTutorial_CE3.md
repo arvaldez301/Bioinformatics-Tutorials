@@ -54,7 +54,7 @@ sort -u high_score_annotations.tsv > priority_annotations.tsv
 wc -l priority_annotations.tsv
 
 # Check the ID format in your protein file
-grep ">" CE3_highconfidence.aa | head -5
+grep ">" CE3_hc.aa | head -5
 
 # Check the ID format in your priority list
 head -5 priority_ids.txt
@@ -67,7 +67,7 @@ The ```grep``` command listing all of the categories of interest can be altered 
 cut -f1 priority_annotations.tsv > priority_ids.txt
 
 # Pull sequences from your predicted proteome
-seqtk subseq CE3_highconfidence.aa \
+seqtk subseq CE3_hc.aa \
     priority_ids.txt > priority_proteins.faa
 
 # Check the ID format in your extracted proteins
@@ -97,7 +97,7 @@ sort -t$'\t' -k4,4 -rn priority_annotations.tsv | head -500 > top500_annotations
 cut -f1 top500_annotations.tsv > top500_ids.txt
 
 # Extract their sequences
-seqtk subseq CE3_highconfidence.aa \
+seqtk subseq CE3_hc.aa \
     top500_ids.txt > top500_proteins.faa
 
 # Verify
